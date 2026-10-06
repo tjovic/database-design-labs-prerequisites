@@ -578,12 +578,31 @@ DROP TABLE Staff;
 ### The same table in two unrelated roles
 
 A different situation: one row has **two** foreign keys to the *same*
-table, in two unrelated roles. Imagine a `Person` table with both a
-`BirthCityID` and a `CurrentCityID`, both pointing at `City`:
+table, in two unrelated roles. `AdventureWorksENG` already has a `City`
+table, so we only need one small scratch table to see this for real: a
+`Person` with both a `BirthCityID` and a `CurrentCityID`, each pointing
+at `City`.
 
 ```sql
--- Illustrative only — AdventureWorksENG has no Person table. It shows
--- the *shape* of joining one table to the same related table twice.
+CREATE TABLE Person (
+    IDPerson      INT PRIMARY KEY,
+    FirstName     NVARCHAR(50) NOT NULL,
+    LastName      NVARCHAR(50) NOT NULL,
+    BirthCityID   INT NOT NULL REFERENCES City(IDCity),
+    CurrentCityID INT NOT NULL REFERENCES City(IDCity)
+);
+
+INSERT INTO Person (IDPerson, FirstName, LastName, BirthCityID, CurrentCityID) VALUES
+(1, 'Ana',   'Novak', 1, 6),  -- born in Zagreb (1), now lives in Berlin (6)
+(2, 'Ivan',  'Kovac', 5, 5),  -- born and still living in Split (5)
+(3, 'Marko', 'Peric', 4, 10); -- born in Rijeka (4), now lives in Rome (10)
+
+SELECT * FROM Person;
+```
+
+Now join `City` twice — once for each role:
+
+```sql
 SELECT
     FirstName,
     LastName,
@@ -596,29 +615,62 @@ INNER JOIN City AS currentCity
     ON Person.CurrentCityID = currentCity.IDCity;
 ```
 
+| FirstName | LastName | BirthCity | CurrentCity |
+|---|---|---|---|
+| Ana | Novak | Zagreb | Berlin |
+| Ivan | Kovac | Split | Split |
+| Marko | Peric | Rijeka | Rome |
+
 `City` appears twice in `FROM` — once per role — each time under a
 different alias. Without the aliases, SQL Server wouldn't know which
 `City` row you meant in the `SELECT` list.
 
-> **Common mistake:** using a single alias for both joins. That forces
-> one `City` row to satisfy *both* conditions at once, which only matches
-> people whose birth city and current city happen to be the same —
-> silently wrong, not an error.
+### Common mistake: one alias for both roles
+
+```sql
+-- Mistake: a single alias can't serve two roles at once
+SELECT
+    FirstName,
+    LastName,
+    city.Name AS CityName
+FROM Person
+INNER JOIN City AS city
+    ON Person.BirthCityID = city.IDCity
+   AND Person.CurrentCityID = city.IDCity;
+```
+
+| FirstName | LastName | CityName |
+|---|---|---|
+| Ivan | Kovac | Split |
+
+Only Ivan survives. One joined `City` row now has to satisfy **both**
+conditions at the same time, which only works when `BirthCityID` and
+`CurrentCityID` happen to be equal — true for Ivan, false for Ana and
+Marko. Ana and Marko are both perfectly valid rows; they just silently
+vanish. No error, no warning — exactly what makes this mistake dangerous.
+
+```sql
+-- Cleanup
+DROP TABLE Person;
+```
 
 ### Check your understanding
 
-1. Why does a self join need table aliases, when a normal join technically could skip them?
-2. What goes wrong if you join `City` once with one alias, but try to use two conditions against it?
+1. Why does joining a table to itself (or to the same related table
+    twice) require aliases, when some joins technically work without them?
+2. In the broken, single-alias version, why does Ivan survive while Ana and Marko don't?
 
 <details>
 <summary>Show answers</summary>
 
-1. Both sides of the join refer to the same table name, so without
-    aliases, SQL Server (and the reader) can't tell which occurrence a
-    column reference belongs to.
-2. A single joined row has to satisfy both conditions simultaneously,
-    which only returns rows where both foreign keys happen to point at the
-    *same* row — not the intended "two independent lookups."
+1. Both occurrences refer to the same table name, so without aliases
+    neither SQL Server nor the reader could tell which occurrence a
+    column reference like `FirstName` belongs to.
+2. The single `city` alias has to match both `BirthCityID` and
+    `CurrentCityID` against the *same* joined row. That's only possible
+    when the two foreign keys already point at the same city — which is
+    true for Ivan (born and still living in Split) but not for Ana or
+    Marko, who moved.
 
 </details>
 
