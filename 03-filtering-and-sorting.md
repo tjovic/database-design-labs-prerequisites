@@ -126,8 +126,23 @@ WHERE NOT Color = 'Crna';
 > these same operators behave a little differently. That's covered in
 > [Section 5 – NULL](#section-5--null).
 
-When mixing `AND` and `OR`, use parentheses to make the intended grouping
-explicit — `AND` binds tighter than `OR`, which surprises people:
+When `AND` and `OR` appear in the same condition, SQL doesn't just
+evaluate them left to right — it follows **operator precedence**, the
+same idea as `*` being evaluated before `+` in arithmetic. Each
+operator has a fixed rank, and higher-ranked operators are evaluated
+first regardless of where they appear:
+
+1. comparisons (`=`, `<>`, `<`, `>`, ...) — evaluated first, producing a `TRUE`/`FALSE`/`UNKNOWN` for each condition;
+2. `NOT`;
+3. `AND`;
+4. `OR` — evaluated last.
+
+So `AND` has higher precedence than `OR`: wherever both appear without
+parentheses, the `AND` part is grouped first, as if it already had
+parentheses around it. This is exactly the kind of thing operator
+precedence causes people to get wrong, because it doesn't match reading
+the condition left to right. Use parentheses to make the intended
+grouping explicit instead of relying on people remembering this order:
 
 ```sql
 -- Ambiguous at a glance — what does this actually select?
@@ -146,8 +161,9 @@ WHERE Color = 'Crna' OR (Color = 'Crvena' AND PriceWithoutVAT < 50);
 1. Using the `AND` truth table, what is `TRUE AND FALSE`?
 2. Using the `OR` truth table, what is `FALSE OR FALSE`?
 3. Why can adding another condition with `AND` never return *more* rows than before?
-4. Without parentheses, does `AND` or `OR` get evaluated first?
-5. Rewrite `WHERE NOT Color = 'Crna'` using `<>` instead.
+4. What is the name of the general rule that makes `AND` get grouped before `OR` when there are no parentheses?
+5. Without parentheses, does `AND` or `OR` get evaluated first?
+6. Rewrite `WHERE NOT Color = 'Crna'` using `<>` instead.
 
 <details>
 <summary>Show answers</summary>
@@ -158,8 +174,10 @@ WHERE Color = 'Crna' OR (Color = 'Crvena' AND PriceWithoutVAT < 50);
     one condition stays excluded, and a row that passes all conditions so
     far can still be knocked out by the new one — it can never let in a
     row that didn't already satisfy everything before it.
-4. `AND` binds tighter than `OR`.
-5. `WHERE Color <> 'Crna'`.
+4. Operator precedence — the same general rule that makes `*` evaluate
+    before `+` in arithmetic.
+5. `AND` — it has higher precedence than `OR`.
+6. `WHERE Color <> 'Crna'`.
 
 </details>
 
