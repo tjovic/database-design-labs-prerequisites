@@ -204,8 +204,11 @@ small sample database for a retailer selling products to customers.
 
 ```mermaid
 graph LR
+    %% Definition of styles for entities (rectangles) and relationships (diamonds)
     classDef entity fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef rel fill:#fff,stroke:#333,stroke-width:1px;
 
+    %% Entities
     State:::entity
     City:::entity
     Customer:::entity
@@ -217,15 +220,27 @@ graph LR
     Subcategory:::entity
     Category:::entity
 
-    State -->|1:N| City
-    City -->|1:N| Customer
-    Customer -->|1:N| Invoice
-    Salesman -->|1:N| Invoice
-    Invoice -->|1:1| CreditCard
-    Invoice -->|1:N| InvoiceItem
-    Product -->|1:N| InvoiceItem
-    Subcategory -->|1:N| Product
-    Category -->|1:N| Subcategory
+    %% Relationships as diamonds { }
+    r1{Has}:::rel
+    r2{Belongs To}:::rel
+    r3{Gets}:::rel
+    r4{Handles}:::rel
+    r5{Uses}:::rel
+    r6{Contains}:::rel
+    r7{Included In}:::rel
+    r8{Belongs To}:::rel
+    r9{Categorizes}:::rel
+
+    %% Flow and cardinalities (defined on both sides)
+    State ---|1| r1 ---|N| City
+    City ---|1| r2 ---|N| Customer
+    Customer ---|1| r3 ---|N| Invoice
+    Salesman ---|1| r4 ---|N| Invoice
+    Invoice ---|N| r5 ---|1| CreditCard
+    Invoice ---|1| r6 ---|N| InvoiceItem
+    Product ---|1| r7 ---|N| InvoiceItem
+    Subcategory ---|1| r8 ---|N| Product
+    Category ---|1| r9 ---|N| Subcategory
 ```
 
 ### Naming conventions
