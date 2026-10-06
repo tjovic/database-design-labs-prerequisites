@@ -299,33 +299,124 @@ different roles.
 
 ### Hierarchies: a self join
 
-A classic case: every salesman could have a manager, and a manager is
-just another salesman. If `Salesman` had a `ManagerID` column pointing
-back at `Salesman.IDSalesman`, you'd join the table to itself:
+A classic case: every employee could have a manager, and a manager is
+just another employee. The foreign key points back at its own table's
+primary key.
+
+`AdventureWorksENG` doesn't have a ready-made hierarchy table, so let's
+build a small one and actually run a self join against it.
+
+> **Forward reference:** `CREATE TABLE` is formally covered in
+> [08 – Database Integrity & Constraints](08-database-integrity-and-constraints.md).
+> For now, just copy the statement below as-is to set up a small scratch
+> table — the point of this section is the `JOIN`, not the `CREATE TABLE`.
 
 ```sql
--- Illustrative only — AdventureWorksENG's real Salesman table has no
--- ManagerID column, so this won't run as-is. It shows the *shape* of
--- a hierarchical self join.
+CREATE TABLE Staff (
+    IDStaff   INT PRIMARY KEY,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName  NVARCHAR(50) NOT NULL,
+    Salary    DECIMAL(10,2) NOT NULL,
+    ManagerID INT NULL,
+    CONSTRAINT FK_Staff_Manager FOREIGN KEY (ManagerID) REFERENCES Staff(IDStaff)
+);
+
+INSERT INTO Staff (IDStaff, FirstName, LastName, Salary, ManagerID) VALUES
+(1, 'Ana',   'Novak',   6000.00, NULL), -- top of the hierarchy, no manager
+(2, 'Ivan',  'Kovac',   4200.00, 1),
+(3, 'Mia',   'Peric',   6100.00, 1),
+(4, 'Boris', 'Matic',   3000.00, 2),
+(5, 'Tea',   'Vukovic', 3200.00, 2),
+(6, 'Roko',  'Juric',   4500.00, 2),
+(7, 'Lana',  'Horvat',  2800.00, 3);
+
+SELECT * FROM Staff;
+```
+
+`ManagerID` is a foreign key to `Staff.IDStaff` — the same table. Ana's
+`ManagerID` is `NULL`: she's the director, at the top of the hierarchy.
+Everyone else points at the `IDStaff` of the person they report to:
+
+```text
+Ana (no manager)
+├── Ivan
+│   ├── Boris
+│   ├── Tea
+│   └── Roko
+└── Mia
+    └── Lana
+```
+
+Now the self join — list every staff member next to their manager's name:
+
+```sql
 SELECT
     emp.FirstName AS EmployeeFirstName,
     emp.LastName  AS EmployeeLastName,
     mgr.FirstName AS ManagerFirstName,
     mgr.LastName  AS ManagerLastName
-FROM Salesman AS emp
-LEFT JOIN Salesman AS mgr
-    ON emp.ManagerID = mgr.IDSalesman
-ORDER BY emp.IDSalesman;
+FROM Staff AS emp
+LEFT JOIN Staff AS mgr
+    ON emp.ManagerID = mgr.IDStaff
+ORDER BY emp.IDStaff;
 ```
 
-Both `emp` and `mgr` are the same table, `Salesman` — the aliases are
-what let you tell the two roles apart. `LEFT JOIN` is used here because
-someone at the top of the hierarchy (the owner, say) has no manager at
-all.
+`emp` and `mgr` are both aliases for `Staff` — the same table, joined to
+itself. `LEFT JOIN` is required here: Ana has no manager, so an
+`INNER JOIN` would silently drop her row entirely (see
+[Section 3 – LEFT JOIN](#section-3--left-join) for why).
+
+### A question only a self join answers directly: who out-earns their manager?
+
+```sql
+SELECT
+    emp.FirstName + ' ' + emp.LastName AS Employee,
+    emp.Salary AS EmployeeSalary,
+    mgr.FirstName + ' ' + mgr.LastName AS Manager,
+    mgr.Salary AS ManagerSalary
+FROM Staff AS emp
+INNER JOIN Staff AS mgr
+    ON emp.ManagerID = mgr.IDStaff
+WHERE emp.Salary > mgr.Salary;
+```
+
+This returns Mia (who out-earns Ana) and Roko (who out-earns Ivan). Here
+`INNER JOIN` is the right choice, not `LEFT JOIN`: Ana has no manager to
+compare her salary against, so it's correct for her to drop out of this
+particular question.
 
 This pattern — a foreign key pointing back at its own table's primary
 key — is how hierarchies are usually modeled: employee → manager,
 category → parent category, organizational unit → parent unit.
+
+```sql
+-- Cleanup
+DROP TABLE Staff;
+```
+
+### Check your understanding
+
+1. Why does the first query need `LEFT JOIN`, while the "out-earns their
+    manager" query works fine with `INNER JOIN`?
+2. What does a `NULL` in `ManagerID` mean for a row in `Staff`?
+3. Could `emp` and `mgr` both be dropped in favor of just writing `Staff`
+    twice in the `FROM` clause without aliases? Why or why not?
+
+<details>
+<summary>Show answers</summary>
+
+1. `LEFT JOIN` is needed to keep rows with no manager (Ana) in the
+    result. The salary comparison only makes sense for employees who
+    *have* a manager, so `INNER JOIN` correctly excludes Ana there instead
+    of comparing her against a `NULL`.
+2. That row is at the top of the hierarchy — it has no manager.
+3. No. Both occurrences in `FROM` refer to the same table name, so
+    without aliases neither SQL Server nor the reader could tell which
+    occurrence a column like `FirstName` belongs to.
+
+</details>
+
+------------------------------------------------------------------------
 
 ### The same table in two unrelated roles
 
@@ -512,11 +603,11 @@ SELECT i.IDInvoice, s.IDSalesman
 FROM Invoice AS i
 FULL OUTER JOIN Salesman AS s ON i.SalesmanID = s.IDSalesman;
 
--- Self join pattern: same table, two roles, two aliases
--- (ManagerID is illustrative — AdventureWorksENG has no such column)
+-- Self join: same table, two roles, two aliases
+-- (uses the scratch Staff table from Section 7 — ManagerID points back at Staff.IDStaff)
 SELECT emp.LastName, mgr.LastName AS ManagerLastName
-FROM Salesman AS emp
-LEFT JOIN Salesman AS mgr ON emp.ManagerID = mgr.IDSalesman;
+FROM Staff AS emp
+LEFT JOIN Staff AS mgr ON emp.ManagerID = mgr.IDStaff;
 
 -- CROSS JOIN: every combination of both tables
 SELECT cat.Name, s.Name
