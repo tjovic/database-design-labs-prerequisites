@@ -251,7 +251,168 @@ WHERE i.IDInvoice IS NULL
 
 ------------------------------------------------------------------------
 
-## Section 6 – Joining more than two tables
+## Section 6 – Seeing all four side by side
+
+The difference between `INNER`, `LEFT`, `RIGHT`, and `FULL OUTER` is
+easiest to see on one small, intuitive example instead of four separate
+ones. Let's build two tiny tables and run all four joins against the
+exact same data.
+
+> **Forward reference:** `CREATE TABLE` is formally covered in
+> [08 – Database Integrity & Constraints](08-database-integrity-and-constraints.md).
+> Just copy the statements below as-is — the point here is the `JOIN`.
+
+```sql
+CREATE TABLE Club (
+    IDClub   INT PRIMARY KEY,
+    ClubName NVARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Student (
+    IDStudent INT PRIMARY KEY,
+    Name      NVARCHAR(50) NOT NULL,
+    ClubID    INT NULL REFERENCES Club(IDClub)
+);
+
+INSERT INTO Club (IDClub, ClubName) VALUES
+(10, 'Chess Club'),
+(20, 'Art Club');
+
+INSERT INTO Student (IDStudent, Name, ClubID) VALUES
+(1, 'Ana',  10),
+(2, 'Ivan', 10),
+(3, 'Mia',  NULL);
+```
+
+```text
+Student                       Club
++-----+------+--------+       +-------+------------+
+| IDStudent | Name | ClubID|  | IDClub| ClubName   |
++-----+------+--------+       +-------+------------+
+| 1   | Ana  | 10     |       | 10    | Chess Club |
+| 2   | Ivan | 10     |       | 20    | Art Club   |
+| 3   | Mia  | NULL   |       +-------+------------+
++-----+------+--------+
+```
+
+Ana and Ivan are both in the Chess Club. **Mia isn't in any club** —
+her `ClubID` is `NULL`. The **Art Club has no members** — no `Student`
+row points at it. That mismatch on both sides is exactly what makes this
+example useful.
+
+### INNER JOIN — only rows that match on both sides
+
+```sql
+SELECT s.Name, c.ClubName
+FROM Student AS s
+INNER JOIN Club AS c
+    ON s.ClubID = c.IDClub;
+```
+
+| Name | ClubName |
+|---|---|
+| Ana | Chess Club |
+| Ivan | Chess Club |
+
+**2 rows.** Mia drops out (no club to match), and the Art Club drops out
+(no student to match).
+
+### LEFT JOIN — every Student, matched Club or not
+
+```sql
+SELECT s.Name, c.ClubName
+FROM Student AS s
+LEFT JOIN Club AS c
+    ON s.ClubID = c.IDClub;
+```
+
+| Name | ClubName |
+|---|---|
+| Ana | Chess Club |
+| Ivan | Chess Club |
+| Mia | NULL |
+
+**3 rows.** Every `Student` row survives — Mia is kept, with `NULL` where
+her club would be. The Art Club still doesn't appear: `LEFT JOIN` only
+guarantees rows from the left table (`Student`), not the right one.
+
+### RIGHT JOIN — every Club, matched Student or not
+
+```sql
+SELECT s.Name, c.ClubName
+FROM Student AS s
+RIGHT JOIN Club AS c
+    ON s.ClubID = c.IDClub;
+```
+
+| Name | ClubName |
+|---|---|
+| Ana | Chess Club |
+| Ivan | Chess Club |
+| NULL | Art Club |
+
+**3 rows.** Mirror image of `LEFT JOIN`: every `Club` row survives — the
+Art Club is kept, with `NULL` where its student would be. Mia disappears
+this time, because she isn't part of the right table.
+
+### FULL OUTER JOIN — everything, matched or not
+
+```sql
+SELECT s.Name, c.ClubName
+FROM Student AS s
+FULL OUTER JOIN Club AS c
+    ON s.ClubID = c.IDClub;
+```
+
+| Name | ClubName |
+|---|---|
+| Ana | Chess Club |
+| Ivan | Chess Club |
+| Mia | NULL |
+| NULL | Art Club |
+
+**4 rows.** Nothing is lost from either side — the matched pair, Mia on
+her own, and the Art Club on its own, all appear.
+
+```sql
+-- Cleanup
+DROP TABLE Student;
+DROP TABLE Club;
+```
+
+### Side by side
+
+| Join type | Keeps | Rows here |
+|---|---|---|
+| `INNER JOIN` | only rows matched on both sides | 2 |
+| `LEFT JOIN` | all of `Student`, matched `Club` or not | 3 |
+| `RIGHT JOIN` | all of `Club`, matched `Student` or not | 3 |
+| `FULL OUTER JOIN` | all of `Student` **and** all of `Club` | 4 |
+
+Same six source rows (three `Student`, two `Club`, one of each
+unmatched) — four different answers to "which rows belong together?",
+depending on which side you refuse to lose.
+
+### Check your understanding
+
+1. If a fourth student, Boris, were added with `ClubID = NULL`, how many rows would `INNER JOIN` return? How many would `FULL OUTER JOIN` return?
+2. Which join would you use to find every club, including ones with no members yet, without caring which students (if any) are in them?
+
+<details>
+<summary>Show answers</summary>
+
+1. `INNER JOIN` still returns 2 — Boris has no club, so he can never
+    match. `FULL OUTER JOIN` returns 5 — Boris is another unmatched row
+    from the left side that must still be kept.
+2. `RIGHT JOIN` with `Student` on the left and `Club` on the right (or
+    equivalently, `LEFT JOIN` with `Club` written first) — it keeps every
+    `Club` row regardless of whether any student matches it.
+
+</details>
+
+------------------------------------------------------------------------
+
+## Section 7 – Joining more than two tables
 
 Joins chain together. To list each invoice line with the product name and
 the customer name:
@@ -292,7 +453,7 @@ way.
 
 ------------------------------------------------------------------------
 
-## Section 7 – Joining a table to itself
+## Section 8 – Joining a table to itself
 
 Sometimes the table you need to join is the **same** table — in two
 different roles.
@@ -303,13 +464,9 @@ A classic case: every employee could have a manager, and a manager is
 just another employee. The foreign key points back at its own table's
 primary key.
 
-`AdventureWorksENG` doesn't have a ready-made hierarchy table, so let's
-build a small one and actually run a self join against it.
-
-> **Forward reference:** `CREATE TABLE` is formally covered in
-> [08 – Database Integrity & Constraints](08-database-integrity-and-constraints.md).
-> For now, just copy the statement below as-is to set up a small scratch
-> table — the point of this section is the `JOIN`, not the `CREATE TABLE`.
+`AdventureWorksENG` doesn't have a ready-made hierarchy table, so — just
+like in [Section 6](#section-6--seeing-all-four-side-by-side) — let's
+build a small scratch table and actually run a self join against it.
 
 ```sql
 CREATE TABLE Staff (
@@ -467,7 +624,7 @@ different alias. Without the aliases, SQL Server wouldn't know which
 
 ------------------------------------------------------------------------
 
-## Section 8 – CROSS JOIN
+## Section 9 – CROSS JOIN
 
 `CROSS JOIN` returns the Cartesian product: every row from the first
 table paired with every row from the second. If the first table has 2
@@ -502,7 +659,7 @@ test scenario with every parameter.
 
 ------------------------------------------------------------------------
 
-## Section 9 – A common pitfall: the missing ON
+## Section 10 – A common pitfall: the missing ON
 
 Forgetting the `ON` clause (or using a comma instead of `JOIN`) produces a
 **cross join** — every row from the first table paired with every row
