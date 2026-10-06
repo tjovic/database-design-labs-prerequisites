@@ -271,7 +271,7 @@ the transaction, make the change, and immediately `COMMIT` or `ROLLBACK`.
 ## Section 6 – UPDATE, DELETE, and constraints
 
 The constraints covered in
-[08 – Database Integrity & Constraints](08-database-integrity-and-constraints.md)
+[08 – Creating Tables and Enforcing Integrity](08-creating-tables-and-enforcing-integrity.md)
 don't just block a bad `INSERT` — they apply to `UPDATE` and `DELETE`
 too.
 
@@ -363,7 +363,7 @@ ROLLBACK;
 
 ## Where to go next
 
-Continue to [08 – Database Integrity & Constraints](08-database-integrity-and-constraints.md)
+Continue to [08 – Creating Tables and Enforcing Integrity](08-creating-tables-and-enforcing-integrity.md)
 to see how a table enforces its own rules — required values, uniqueness,
 valid ranges, and valid references to other tables — so that incorrect
 data can't be inserted, changed into, or left behind by a delete.

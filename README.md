@@ -36,7 +36,7 @@ Make sure you can connect to SQL Server and run a query against
 | 05 | [Aggregate Functions](05-aggregate-functions.md) | `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, `GROUP BY`, `HAVING` |
 | 06 | [Subqueries](06-subqueries.md) | scalar subqueries, `IN`, `EXISTS`, subqueries in `FROM` |
 | 07 | [INSERT, UPDATE, DELETE](07-insert-update-delete.md) | adding, changing, and removing rows safely |
-| 08 | [Database Integrity & Constraints](08-database-integrity-and-constraints.md) | `NOT NULL`, `DEFAULT`, `PRIMARY KEY`, `UNIQUE`, `CHECK`, `FOREIGN KEY`, composite/surrogate keys, `ALTER TABLE` |
+| 08 | [Creating Tables and Enforcing Integrity](08-creating-tables-and-enforcing-integrity.md) | `NOT NULL`, `DEFAULT`, `PRIMARY KEY`, `UNIQUE`, `CHECK`, `FOREIGN KEY`, composite/surrogate keys, `ALTER TABLE` |
 | 09 | [Built-in Functions](09-built-in-functions.md) | math, string, date, conversion, and `NULL`-handling functions, used in `SELECT` and `WHERE` |
 
 ---
@@ -66,7 +66,7 @@ Some exercises in `sql/exercises.sql` insert, update, or delete rows. Each
 of those exercises includes its own cleanup statements so the database is
 left unchanged once you are done.
 
-The exception is [08 - Database Integrity & Constraints](08-database-integrity-and-constraints.md),
+The exception is [08 - Creating Tables and Enforcing Integrity](08-creating-tables-and-enforcing-integrity.md),
 which creates its own standalone example tables (`Teacher`, `Student`,
 `Subject`, `Exam`) instead of using `AdventureWorksENG`.
 
@@ -86,7 +86,7 @@ database-sql-prerequisites/
 ├── 05-aggregate-functions.md
 ├── 06-subqueries.md
 ├── 07-insert-update-delete.md
-├── 08-database-integrity-and-constraints.md
+├── 08-creating-tables-and-enforcing-integrity.md
 ├── 09-built-in-functions.md
 │
 └── sql/

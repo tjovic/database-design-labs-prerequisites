@@ -543,7 +543,7 @@ GO
 
 /*===========================================================================
   SECTION 8 — Database Integrity and Constraints
-  See: 08-database-integrity-and-constraints.md
+  See: 08-creating-tables-and-enforcing-integrity.md
 
   These exercises build their OWN standalone tables (Teacher, Student,
   Subject, Exam) instead of using AdventureWorksENG. Each exercise cleans

@@ -33,7 +33,7 @@ to other developers, so it's worth knowing them from the start:
 
 | Sublanguage | Stands for | Typical commands | Covered in |
 |---|---|---|---|
-| **DDL** | Data Definition Language | `CREATE`, `ALTER`, `DROP` | [08 – Database Integrity & Constraints](08-database-integrity-and-constraints.md) |
+| **DDL** | Data Definition Language | `CREATE`, `ALTER`, `DROP` | [08 – Creating Tables and Enforcing Integrity](08-creating-tables-and-enforcing-integrity.md) |
 | **DML** | Data Manipulation Language | `SELECT`, `INSERT`, `UPDATE`, `DELETE` | [02](02-select-basics.md)–[07](07-insert-update-delete.md) |
 | **TCL** | Transaction Control Language | `BEGIN TRAN`, `COMMIT`, `ROLLBACK` | briefly in [07 – INSERT, UPDATE, DELETE](07-insert-update-delete.md) |
 | **DCL** | Data Control Language | `GRANT`, `REVOKE` | out of scope for this material |

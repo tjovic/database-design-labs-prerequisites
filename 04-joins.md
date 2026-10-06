@@ -259,7 +259,7 @@ ones. Let's build two tiny tables and run all four joins against the
 exact same data.
 
 > **Forward reference:** `CREATE TABLE` is formally covered in
-> [08 – Database Integrity & Constraints](08-database-integrity-and-constraints.md).
+> [08 – Creating Tables and Enforcing Integrity](08-creating-tables-and-enforcing-integrity.md).
 > Just copy the statements below as-is — the point here is the `JOIN`.
 
 ```sql

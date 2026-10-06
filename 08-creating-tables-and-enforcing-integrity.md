@@ -1,4 +1,4 @@
-# 08 – Database Integrity & Constraints
+# 08 – Creating Tables and Enforcing Integrity
 
 > Examples are written in **SQL Server** style (`IDENTITY`, `NVARCHAR`, `CHECK`, `ALTER TABLE`).
 > Some details differ on other database systems.
@@ -7,8 +7,7 @@
 `Subject`, `Exam`) from scratch. It does not use `AdventureWorksENG`.
 
 `CREATE TABLE` and `ALTER TABLE` are SQL's **DDL** (Data Definition
-Language) — see [01, Section 1](01-relational-database-basics.md#section-1--what-is-sql).
-This file is where DDL is covered in depth.
+Language)
 
 ## Learning objectives
 
