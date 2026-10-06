@@ -604,15 +604,15 @@ Now join `City` twice — once for each role:
 
 ```sql
 SELECT
-    FirstName,
-    LastName,
+    p.FirstName,
+    p.LastName,
     birthCity.Name    AS BirthCity,
     currentCity.Name  AS CurrentCity
-FROM Person
+FROM Person AS p
 INNER JOIN City AS birthCity
-    ON Person.BirthCityID = birthCity.IDCity
+    ON p.BirthCityID = birthCity.IDCity
 INNER JOIN City AS currentCity
-    ON Person.CurrentCityID = currentCity.IDCity;
+    ON p.CurrentCityID = currentCity.IDCity;
 ```
 
 | FirstName | LastName | BirthCity | CurrentCity |
@@ -630,13 +630,13 @@ different alias. Without the aliases, SQL Server wouldn't know which
 ```sql
 -- Mistake: a single alias can't serve two roles at once
 SELECT
-    FirstName,
-    LastName,
+    p.FirstName,
+    p.LastName,
     city.Name AS CityName
-FROM Person
+FROM Person AS p
 INNER JOIN City AS city
-    ON Person.BirthCityID = city.IDCity
-   AND Person.CurrentCityID = city.IDCity;
+    ON p.BirthCityID = city.IDCity
+   AND p.CurrentCityID = city.IDCity;
 ```
 
 | FirstName | LastName | CityName |
